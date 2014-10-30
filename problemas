@@ -1,0 +1,2 @@
+1) Quando dou swap entre processos impares, ele viola endereço de memoria
+2) quando ele pega uma linha na tabela de sistema, ele deve colocar seu id la

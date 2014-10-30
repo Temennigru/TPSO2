@@ -1,0 +1,17 @@
+1) calculando o endereço fisico:
+o endereço virtual eh dividido em numero da pagina - offset
+o numero da pagina endereça a tabela de paginas.
+a tabela de páginas, contém em qual frame determinada página se encontra
+para saber o frame, o numero da pagina eh somado com o registrador base da tabela de paginas, dai tem-se o endereço na tabela de paginas que contem o frame
+o endereço fisico é calculado pegando o frame da tabela de paginas concatenado com o offset que vem diretamente do endereço virtual
+
+2) como funciona no nosso TP:
+- o endereço virtual é composto de 25 bits: 16 para indexar o frame e 9 para indexar o offset dentro do frame.
+- a tabela da peginas possui 2^16 entradas = 65.536
+- portanto, existem 2^16 = 65.536 frames
+- cada frame possui 2^9 = 512 palavras de 32 bits
+- a memoria fisica possui 2^13 = 8.192 frames
+- o disco rígido possui 2^17 = 131.072 setores.
+- cada setor possui o mesmo tamanho de um frame.
+
+Elias
