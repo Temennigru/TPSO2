@@ -21,6 +21,7 @@ uint32_t procurar_frame_livre_dados(void);
 uint32_t procurar_frame_sistema(void);
 uint32_t procurar_frame_tabela_2(uint32_t virtaddr);
 uint32_t dump_setor_livre (uint32_t);
+void restaurar_setor (uint32_t setor, uint32_t frame);
 
 static uint32_t id_processos = 1;
 
@@ -371,7 +372,7 @@ uint32_t dump_setor_livre (uint32_t frame) {
     return VM_ABORT;
 }
 
-uint32_t restaurar_setor (uint32_t setor, uint32_t frame) {
+void restaurar_setor (uint32_t setor, uint32_t frame) {
     dccvmm_load_frame(setor, frame);
 
     uint32_t i, j, k;
