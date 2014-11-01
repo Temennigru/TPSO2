@@ -1,0 +1,12 @@
+swap 19
+alloc 0x123400
+read 0x123401
+write 0x123401 25
+read 0x123401
+swap 21
+alloc 0x123400
+read 0x123401
+write 0x123401 75
+read 0x123401
+swap 19
+read 0x123401
