@@ -10,12 +10,17 @@
 // Cada bit deste meio frame representará um frame na memória: 0.5 frame (128) X 32 bits (word) = 4.096 bits = quantidade de frames presentes na memória.
 #define INICIO_FRAMES_LIVRES 0x0 // endereço do primeiro frame
 #define FIM_FRAMES_LIVRES 0x7F // 0x7F = 0d127 endereço de memoria
-#define INICIO_TABELA_SISTEMA 0x80 // 0x80 = 0d128 endereço de memoria
+#define INICIO_TABELA_SISTEMA 0x200 // 0x200 = 0d512 endereço de memoria
 #define FIM_TABELA_SISTEMA 0xFFF // 0xFFF = 0d4095 endereço de memoria
 #define FIM_MEMORIA_SISTEMA 0xFFF // 0xFFF = 0d4095 endereço de memoria
 #define INICIO_MEMORIA_PROCESSOS 0x1000 // 0x1000 = 0d4096 endereço de memoria
 #define FIM_MEMORIA_PROCESSOS 0xFFFFF // 0xFFFFF = 1048575 endereço de memoria
 
+
+uint32_t procurar_frame_livre_dados(void);
+uint32_t procurar_frame_sistema(void);
+uint32_t procurar_frame_tabela_2(uint32_t virtaddr);
+uint32_t dump_setor_livre (uint32_t);
 
 static uint32_t id_processos = 1;
 
@@ -40,7 +45,26 @@ void os_init(void) {
 	// Inicializando a variável __pagetable:
 	__pagetable = 0x0;
 	// Inicializando o contador do id de processos: Em nosso sistema operacional, não é aceito um processo com ID zero
-	id_processos = 1;	
+    id_processos = 1;
+
+
+    // Inicializar o disco:
+    dccvmm_init();
+
+    // Usa frame 1 para inicializar o disco
+    uint32_t j;
+    for (j = 0; j < 0x80; j++) {
+        __frames[1].words[j] = 0xFFFF; // Primeiros 128 frames indicam o uso do disco
+    }
+
+    dccvmm_dump_frame(0x1, 0x0); // Dump do frame 2 para o setor 0
+
+    dccvmm_zero(1); // Reset no frame 1
+
+    for (j = 0x1; j < 0x100; j++) {
+        dccvmm_dump_frame(0x1, j); //
+    }
+
 }
 
 uint32_t os_pagefault(uint32_t address, uint32_t perms, uint32_t pte){
@@ -153,6 +177,7 @@ void os_alloc(uint32_t virtaddr) {
 				{
 					printf("(RETIRAR ESTE PRINT) Não houve espaço de MEMÓRIA DE DADOS para alocar o DADO propriamente dito\n");
 					// Podemos colocar aqui uma condição para o caso de não achar um frame livre e implementar a parte 5
+                    
 				}
 			}
 			else
@@ -328,10 +353,37 @@ uint32_t procurar_frame_sistema(void){
 	return 0x0;
 }
 
+uint32_t dump_setor_livre (uint32_t frame) {
+    int i, j, k;
 
+    for (i = 0; i < 0x80; i++) {
+        dccvmm_load_frame(i, 0x1);
+        for (j = 0; j < 0x100; j++) {
+            for (k = 0; k < 0x20; k++) {
+                if (!(__frames[i].words[j] & (0x00000001 << k))) { // Setor livre
+                    dccvmm_dump_frame(frame, k + (j * 0x20) + (i * 0x20 * 0x100));
+                    return k + (j * 0x20) + (i * 0x20 * 0x100);
+                }
+            }
+        }
+    }
+    printf("Erro: Acabou o espaço em disco.\n");
+    return VM_ABORT;
+}
 
+uint32_t restaurar_setor (uint32_t setor, uint32_t frame) {
+    dccvmm_load_frame(setor, frame);
 
+    uint32_t i, j, k;
+    i = setor / (0x20 * 0x100); // Frame
+    j = (setor % (0x20 * 0x100)) / 0x20 // Word offset
+    k = setor % 0x20; // Bit offset
 
+    uint32_t mask = ~(0x00000001 << k);
 
+    dccvmm_load_frame(i, 0x1); // Pull usage frame
 
+    __frames[1].words[j] &= mask; // Set unused
 
+    dccvmm_dump_frame(0x1, i); // Push updated usage
+}

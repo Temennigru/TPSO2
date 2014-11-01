@@ -3,7 +3,7 @@ TARGET   = tp2
 
 CC       = gcc -std=c11 -c
 # compiling flags here
-CFLAGS   = -Wall -I. -Wextra -lpthread
+CFLAGS   = -Wall -I. -Wextra -lpthread -DNDEBUG
 
 LINKER   = gcc -o
 # linking flags here
